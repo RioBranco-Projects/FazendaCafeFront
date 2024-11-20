@@ -1,7 +1,7 @@
 <template>
   <Transition name="fade-horizontal">
   <div class="login-page">
-    <img src="/src/assets/Coffee Logo.png" alt="">
+    <img src="/src/assets/CoffeeLogo.png" alt="">
     <div class="login-container">
         <h2>
             <img src="/src/assets/CafeIcon.png" width="35px" alt="">

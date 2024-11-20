@@ -11,19 +11,19 @@ import { RouterLink } from 'vue-router';
             </div>
         </RouterLink>
 
-        <RouterLink to="/comparar">
+        <RouterLink to="/vendas">
             <div class="label">
                 <img src="../assets/IconsMenu/Sales.png" alt="">
                 <p>Vendas</p>
             </div>
         </RouterLink>
-        <RouterLink to="/relatorio">
+        <RouterLink to="/despesas">
             <div class="label">
                 <img src="../assets/IconsMenu/Despesas.png" alt="">
                 <p>Despesas</p>
             </div>
         </RouterLink>
-        <RouterLink to="/relatorio">
+        <RouterLink to="/funcionario">
             <div class="label">
                 <img src="../assets/IconsMenu/funcionario.png" alt="">
                 <p>Funcionários</p>
@@ -54,30 +54,26 @@ import { RouterLink } from 'vue-router';
 .menu-lateral {
     z-index: 1;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
     height: 100vh;
     flex-direction: column;
     width: auto;
     background-color: #4e342e;
     transition: calc(.3s);
-
-    @media (max-width: 768px) {
-        display: none;
-    }
 }
 
 a {
     text-decoration: none;
     color: #ffffff;
-    font-weight: bold;
+    font-weight: bolder;
     transition: calc(.3s);
 }
 
 .label {
     padding: 20px;
-    height: auto;
+    margin: 15px 0;
+    height: 80px;
     display: flex;
-    cursor: initial;
     align-items: center;
     gap: 20px;
     width: 100%;

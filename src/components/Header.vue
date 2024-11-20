@@ -10,8 +10,6 @@
                     <a class="logout" @click="logout">Logout</a>
                 </div>
             </div>
-            <div class="logo">
-            </div>
         </div>
     </header>
 </template>

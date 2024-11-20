@@ -20,6 +20,10 @@ import MenuLateral from '../components/MenuLateral.vue';
 }
 
 .sla {
+    background-image: url('/src/assets/CoffeeLogo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    overflow: hidden;
     width: 100%;
     background-color: #fff;
 }
