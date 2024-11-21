@@ -8,12 +8,14 @@ const reportData = ref(null);
 const fetchReportData = async () => {
   try {
     const response = await axios.get('http://localhost:5000/report');
+    console.log('Dados recebidos:', response.data); // Validação do valor recebido
     reportData.value = response.data;
   } catch (error) {
     console.error('Erro ao buscar relatório:', error);
     alert('Erro ao carregar dados do relatório.');
   }
 };
+
 
 const exportToExcel = () => {
   if (!reportData.value) return;
@@ -50,7 +52,7 @@ onMounted(() => {
         <p><strong>Vendas Totais:</strong> R$ {{ reportData.totalSales }}</p>
         <p><strong>Despesas Totais:</strong> R$ {{ reportData.totalExpenses }}</p>
         <p><strong>Lucro Final:</strong> R$ {{ reportData.profit }}</p>
-        <p><strong>Plantios Registrados:</strong> {{ reportData.totalPlantios }}</p>
+        <p><strong>Plantios Registrados:</strong> {{ reportData.totalPlantios || 0 }}</p>
         <p><strong>Funcionários Cadastrados:</strong> {{ reportData.totalEmployees }}</p>
         <p><strong>Lucro por Funcionário:</strong> R$ {{ reportData.profitPerEmployee }}</p>
       </div>
@@ -124,12 +126,14 @@ onMounted(() => {
   font-family: Arial, sans-serif;
   background-color: #f9f4ef;
 }
+
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .export-btn {
   padding: 10px 20px;
   background-color: #4CAF50;
@@ -138,38 +142,57 @@ header {
   border-radius: 5px;
   cursor: pointer;
 }
+
 .export-btn:hover {
   background-color: #45a049;
 }
+
 .report-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+
 .summary {
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .history {
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 400px; /* Altura máxima para o histórico */
+  overflow-y: auto; /* Adiciona scroll vertical */
+  border: 1px solid #ddd; /* Bordas para separação visual */
 }
+
 table {
-  margin: 20px 0;
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
+
 th, td {
-  padding: 10px;
+  padding: 12px 15px;
   border: 1px solid #ddd;
   text-align: left;
 }
+
 th {
-  background-color: #f2f2f2;
+  background-color: #f9f4ef; /* Fundo consistente */
+  position: sticky; /* Cabeçalho fixo ao rolar */
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1); /* Sombra leve */
+}
+
+td {
+  background-color: #fff; /* Fundo das células */
 }
 </style>
+
+

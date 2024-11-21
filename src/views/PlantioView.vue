@@ -26,12 +26,14 @@ const handlePlantingSubmit = async () => {
 const fetchPlantings = async () => {
   try {
     const response = await axios.get(`http://localhost:5000/employees/${employeeId}/plantios`);
+    console.log('Dados recebidos:', response.data); // Verifique se os dados estão corretos
     plantings.value = response.data;
   } catch (error) {
     console.error('Erro ao buscar plantios:', error);
     errorMessage.value = 'Erro ao buscar plantios.';
   }
 };
+
 onMounted(() => {
   fetchPlantings();
 });

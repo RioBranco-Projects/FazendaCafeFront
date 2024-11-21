@@ -80,14 +80,6 @@ onMounted(() => {
             description="Total de plantios registrados no sistema"
             />
         </div>
-        <div class="card">
-          <Card
-          title="Plantios (Geral)"
-          img="/src/assets/IconsMenu/Plantio.png"
-          :totalSales="`${totalPlantiosGeneral} Plantios`"
-          description="Total de plantios registrados no sistema"
-          />
-        </div>
       </div>
     </div>
     <div class="boxes">
@@ -116,9 +108,6 @@ onMounted(() => {
         />
       </div>
       
-      <div class="graphics">
-        <ChartView/>
-      </div>
     </div>
   </section>
 </template>
@@ -136,7 +125,6 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: auto;
   border-radius: 20px;
   background-color: #6f4e37;
 }
