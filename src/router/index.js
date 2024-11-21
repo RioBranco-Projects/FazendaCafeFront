@@ -1,11 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'login',
-      component: () => import ('../views/pages/LoginView.vue'),
+      component: () => import('../views/pages/LoginView.vue'),
     },
     {
       path: '/register',
@@ -34,11 +35,12 @@ const router = createRouter({
         },
         {
           path: '/despesas',
-          name: 'despesass',
+          name: 'despesas',
           component: () => import('../views/DespesasView.vue'),
         },
-      ]
+      ],
     },
   ],
-})
-export default router
+});
+
+export default router;

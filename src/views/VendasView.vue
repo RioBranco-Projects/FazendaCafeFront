@@ -1,7 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue';
-
-// Dados do formulário de vendas
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+const userName = ref('');
+const storedCpf = localStorage.getItem('loggedCpf');
+const fetchUserName = async () => {
+  if (storedCpf) {
+    try {
+      const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
+      userName.value = response.data.name; // Nome retornado do backend
+    } catch (error) {
+      console.error('Erro ao buscar nome do usuário:', error.response?.data || error.message);
+    }
+  }
+};
+onMounted(() => {
+  fetchUserName();
+});
+// Pega o employeeId do localStorage
+const employeeId = ref(localStorage.getItem('employeeId')); // ID do funcionário logado
+const sales = ref([]); // Lista de vendas
 const newSale = ref({
   date: '',
   number: '',
@@ -11,113 +28,97 @@ const newSale = ref({
   invoice: '',
 });
 
-const sales = ref([]);
-
-// Controle de exibição do formulário de nova venda
+// Controle do formulário
 const showNewSaleForm = ref(false);
 
-// Adicionar nova venda
-const addSale = () => {
-  if (
-    newSale.value.date &&
-    newSale.value.number &&
-    newSale.value.client &&
-    newSale.value.status &&
-    newSale.value.total &&
-    newSale.value.invoice
-  ) {
-    // Adiciona a nova venda à lista
-    sales.value.push({ ...newSale.value });
-    // Limpa os campos do formulário
-    Object.keys(newSale.value).forEach((key) => {
-      newSale.value[key] = '';
-    });
-    alert('Venda adicionada com sucesso!');
-    showNewSaleForm.value = false; // Fecha o formulário após adicionar a venda
-  } else {
-    alert('Por favor, preencha todos os campos antes de adicionar uma venda.');
+// Função para buscar vendas do funcionário logado
+const fetchSales = async () => {
+  try {
+    const response = await axios.get(`http://localhost:5000/employees/${employeeId.value}/sales`);
+    sales.value = response.data;
+  } catch (error) {
+    console.error('Erro ao buscar vendas:', error);
+    alert('Erro ao buscar vendas.');
   }
 };
 
-// Estatísticas gerais
-const totalFaturado = computed(() =>
-  sales.value.reduce((sum, sale) => (sale.status === 'Faturado' ? sum + parseFloat(sale.total) : sum), 0)
-);
+// Função para adicionar nova venda
+const addSale = async () => {
+  try {
+    const response = await axios.post(`http://localhost:5000/employees/${employeeId.value}/sales`, {
+      ...newSale.value,
+    });
 
-const totalAprovado = computed(() =>
-  sales.value.reduce((sum, sale) => (sale.status === 'Aprovado' ? sum + parseFloat(sale.total) : sum), 0)
-);
+    alert(response.data); // Mostra mensagem de sucesso
+    fetchSales(); // Atualiza a lista de vendas
+    Object.keys(newSale.value).forEach((key) => (newSale.value[key] = '')); // Limpa o formulário
+    showNewSaleForm.value = false; // Fecha o formulário
+  } catch (error) {
+    console.error('Erro ao adicionar venda:', error);
+    alert('Erro ao adicionar venda.');
+  }
+};
 
-const totalVendas = computed(() => sales.value.length);
+// Carregar vendas ao montar o componente
+onMounted(() => {
+  if (!employeeId.value) {
+    alert('Erro: Funcionário não autenticado.');
+    return;
+  }
+  fetchSales();
+});
 </script>
 
+
+
 <template>
-  <div class="dashboard-container">
-    <!-- Cabeçalho -->
+  <div class="sales-page">
     <header class="header">
-      <h1>Vendas e Orçamentos</h1>
-      <div class="header-buttons">
-        <button class="btn" @click="showNewSaleForm = true">Nova Venda</button>
-      </div>
+      <h1>Vendas do {{ userName }}</h1>
+      <button @click="showNewSaleForm = true" class="btn">Adicionar Venda</button>
     </header>
 
-    <!-- Formulário para Adicionar Venda -->
-    <div v-if="showNewSaleForm" class="add-sale-form">
+    <!-- Formulário para adicionar nova venda -->
+    <div v-if="showNewSaleForm" class="form-container">
       <h2>Nova Venda</h2>
       <form @submit.prevent="addSale">
         <div class="form-control">
           <label for="date">Data</label>
-          <input v-model="newSale.date" id="date" type="date" />
+          <input v-model="newSale.date" id="date" type="date" required />
         </div>
         <div class="form-control">
           <label for="number">Número</label>
-          <input v-model="newSale.number" id="number" type="text" placeholder="Número da venda" />
+          <input v-model="newSale.number" id="number" type="text" placeholder="Número da venda" required />
         </div>
         <div class="form-control">
           <label for="client">Cliente</label>
-          <input v-model="newSale.client" id="client" type="text" placeholder="Nome do cliente" />
+          <input v-model="newSale.client" id="client" type="text" placeholder="Nome do cliente" required />
         </div>
         <div class="form-control">
           <label for="status">Status</label>
-          <select v-model="newSale.status" id="status">
-            <option value="" disabled>Selecione</option>
+          <select v-model="newSale.status" id="status" required>
             <option value="Faturado">Faturado</option>
             <option value="Aprovado">Aprovado</option>
           </select>
         </div>
         <div class="form-control">
-          <label for="total">Valor (R$)</label>
-          <input v-model="newSale.total" id="total" type="number" step="0.01" placeholder="Valor total da venda" />
+          <label for="total">Valor Total</label>
+          <input v-model="newSale.total" id="total" type="number" step="0.01" required />
         </div>
         <div class="form-control">
           <label for="invoice">Nota Fiscal</label>
-          <input v-model="newSale.invoice" id="invoice" type="text" placeholder="Nota fiscal" />
+          <input v-model="newSale.invoice" id="invoice" type="text" placeholder="Número da nota fiscal" required />
         </div>
         <div class="form-buttons">
-          <button type="submit" class="btn">Adicionar</button>
+          <button type="submit" class="btn">Salvar</button>
           <button type="button" class="btn cancel" @click="showNewSaleForm = false">Cancelar</button>
         </div>
       </form>
     </div>
 
-    <!-- Resumo Estatístico -->
-    <div class="summary">
-      <div class="stat-card red">
-        <h3>Faturado</h3>
-        <p>R$ {{ totalFaturado.toFixed(2) }}</p>
-      </div>
-      <div class="stat-card yellow">
-        <h3>Aprovado</h3>
-        <p>R$ {{ totalAprovado.toFixed(2) }}</p>
-      </div>
-      <div class="stat-card green">
-        <h3>Total de Vendas</h3>
-        <p>{{ totalVendas }}</p>
-      </div>
-    </div>
-
-    <!-- Tabela de Vendas -->
-    <div class="sales-table">
+    <!-- Lista de Vendas -->
+    <div class="sales-list">
+      <h2>Vendas Registradas</h2>
       <table>
         <thead>
           <tr>
@@ -125,19 +126,17 @@ const totalVendas = computed(() => sales.value.length);
             <th>Número</th>
             <th>Cliente</th>
             <th>Status</th>
-            <th>Valor (R$)</th>
+            <th>Valor Total</th>
             <th>Nota Fiscal</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(sale, index) in sales" :key="index">
-            <td>{{ sale.date }}</td>
+          <tr v-for="sale in sales" :key="sale.id">
+            <td>{{ sale.date.substring(0, 10).split('-').reverse().join('/') }}</td>
             <td>{{ sale.number }}</td>
             <td>{{ sale.client }}</td>
-            <td>
-              <span :class="'status ' + sale.status.toLowerCase()">{{ sale.status }}</span>
-            </td>
-            <td>{{ parseFloat(sale.total).toFixed(2) }}</td>
+            <td>{{ sale.status }}</td>
+            <td>R$ {{ parseFloat(sale.total).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') }}</td>
             <td>{{ sale.invoice }}</td>
           </tr>
         </tbody>
@@ -146,9 +145,10 @@ const totalVendas = computed(() => sales.value.length);
   </div>
 </template>
 
+
 <style scoped>
 /* Layout Geral */
-.dashboard-container {
+.sales-page {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -171,12 +171,7 @@ const totalVendas = computed(() => sales.value.length);
   color: #6f4e37; /* Marrom escuro */
 }
 
-.header-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
+.header button {
   padding: 10px 20px;
   background-color: #8b5e3c; /* Marrom café */
   color: white;
@@ -186,30 +181,24 @@ const totalVendas = computed(() => sales.value.length);
   cursor: pointer;
 }
 
-.btn:hover {
+.header button:hover {
   background-color: #6f4e37; /* Tom mais escuro */
 }
 
-.btn.cancel {
-  background-color: #e74c3c; /* Vermelho cancelamento */
-}
-
-.btn.cancel:hover {
-  background-color: #c0392b; /* Vermelho escuro */
-}
-
-/* Formulário de Adicionar Venda */
-.add-sale-form {
-    position: absolute;
-    width: 100%;
+/* Formulário para Adicionar Venda */
+.form-container {
+  position: absolute;
   background-color: #fffaf0; /* Fundo bege claro */
   padding: 20px;
+  border: 1px solid #8b5e3c; /* Bordas marromRGBO */
+  width: 400px;
+  left: 79%;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 
-.add-sale-form h2 {
+.form-container h2 {
   margin-bottom: 20px;
   color: #6f4e37; /* Marrom escuro */
 }
@@ -241,95 +230,75 @@ const totalVendas = computed(() => sales.value.length);
   border-color: #6f4e37; /* Marrom escuro no foco */
 }
 
-/* Botões do Formulário */
 .form-buttons {
   display: flex;
   gap: 10px;
 }
 
-/* Resumo Estatístico */
-.summary {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  flex: 1;
-  background-color: #f9f4ef; /* Fundo bege claro */
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.stat-card h3 {
-  font-size: 18px;
-  color: #6f4e37; /* Marrom escuro */
-  margin-bottom: 10px;
-}
-
-.stat-card p {
-  font-size: 20px;
+.form-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
   font-weight: bold;
-  color: #333; /* Preto suave */
+  color: white;
+  cursor: pointer;
 }
 
-.red {
-  border-top: 5px solid #e74c3c; /* Vermelho para Faturado */
+.form-buttons .btn {
+  background-color: #8b5e3c; /* Marrom café */
 }
 
-.yellow {
-  border-top: 5px solid #f1c40f; /* Amarelo para Aprovado */
+.form-buttons .btn:hover {
+  background-color: #6f4e37; /* Marrom escuro */
 }
 
-.green {
-  border-top: 5px solid #27ae60; /* Verde para Total de Vendas */
+.form-buttons .btn.cancel {
+  background-color: #e74c3c; /* Vermelho cancelamento */
 }
 
-/* Tabela de Vendas */
-.sales-table {
+.form-buttons .btn.cancel:hover {
+  background-color: #c0392b; /* Vermelho escuro */
+}
+
+/* Lista de Vendas */
+.sales-list {
   background-color: #fffaf0; /* Fundo bege claro */
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.sales-table table {
+.sales-list h2 {
+  margin-bottom: 20px;
+  color: #6f4e37; /* Marrom escuro */
+}
+
+.sales-list table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.sales-table th,
-.sales-table td {
+.sales-list th,
+.sales-list td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #d3cbb8; /* Bege suave */
 }
 
-.sales-table th {
+.sales-list th {
   background-color: #6f4e37; /* Fundo marrom escuro */
   color: white; /* Texto branco */
   font-size: 14px;
 }
 
-.sales-table tr:hover {
+.sales-list tr:hover {
   background-color: #f3ebe4; /* Fundo bege claro no hover */
 }
 
-.status {
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: white;
-  font-size: 12px;
-}
-
-.status.faturado {
-  background-color: #2ecc71; /* Verde para Faturado */
-}
-
-.status.aprovado {
-  background-color: #f1c40f; /* Amarelo para Aprovado */
+.sales-list td {
+  color: #6f4e37; /* Marrom escuro */
 }
 </style>
+
+
 

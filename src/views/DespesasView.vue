@@ -1,128 +1,120 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+const userName = ref('');
+const storedCpf = localStorage.getItem('loggedCpf');
+const fetchUserName = async () => {
+  if (storedCpf) {
+    try {
+      const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
+      userName.value = response.data.name; // Nome retornado do backend
+    } catch (error) {
+      console.error('Erro ao buscar nome do usuário:', error.response?.data || error.message);
+    }
+  }
+};
+onMounted(() => {
+  fetchUserName();
+});
 
-// Dados do formulário de despesas
+const employeeId = ref(localStorage.getItem('employeeId')); // ID do funcionário logado
+const expenses = ref([]); // Lista de despesas
 const newExpense = ref({
   date: '',
   category: '',
   description: '',
   amount: '',
-  paymentMethod: '',
 });
 
-const expenses = ref([]);
-
-// Controle de exibição do formulário de nova despesa
+// Controle do formulário
 const showNewExpenseForm = ref(false);
 
-// Adicionar nova despesa
-const addExpense = () => {
-  if (
-    newExpense.value.date &&
-    newExpense.value.category &&
-    newExpense.value.description &&
-    newExpense.value.amount &&
-    newExpense.value.paymentMethod
-  ) {
-    // Adiciona a nova despesa à lista
-    expenses.value.push({ ...newExpense.value });
-    // Limpa os campos do formulário
-    Object.keys(newExpense.value).forEach((key) => {
-      newExpense.value[key] = '';
-    });
-    alert('Despesa adicionada com sucesso!');
-    showNewExpenseForm.value = false; // Fecha o formulário após adicionar a despesa
-  } else {
-    alert('Por favor, preencha todos os campos antes de adicionar uma despesa.');
+// Função para buscar despesas do funcionário logado
+const fetchExpenses = async () => {
+  try {
+    const response = await axios.get(`http://localhost:5000/employees/${employeeId.value}/expenses`);
+    expenses.value = response.data;
+  } catch (error) {
+    console.error('Erro ao buscar despesas:', error);
+    alert('Erro ao buscar despesas.');
   }
 };
 
-// Estatísticas gerais
-const totalDespesas = computed(() =>
-  expenses.value.reduce((sum, expense) => sum + parseFloat(expense.amount), 0)
-);
+// Função para adicionar nova despesa
+const addExpense = async () => {
+  try {
+    const response = await axios.post(`http://localhost:5000/employees/${employeeId.value}/expenses`, {
+      ...newExpense.value,
+    });
+
+    alert(response.data); // Mostra mensagem de sucesso
+    fetchExpenses(); // Atualiza a lista de despesas
+    Object.keys(newExpense.value).forEach((key) => (newExpense.value[key] = '')); // Limpa o formulário
+    showNewExpenseForm.value = false; // Fecha o formulário
+  } catch (error) {
+    console.error('Erro ao adicionar despesa:', error);
+    alert('Erro ao adicionar despesa.');
+  }
+};
+
+// Carregar despesas ao montar o componente
+onMounted(() => {
+  fetchExpenses();
+});
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <!-- Cabeçalho -->
+  <div class="expenses-page">
     <header class="header">
-      <h1>Despesas</h1>
-      <div class="header-buttons">
-        <button class="btn" @click="showNewExpenseForm = true">Nova Despesa</button>
-      </div>
+      <h1>Despesas do {{ userName }}</h1>
+      <button @click="showNewExpenseForm = true" class="btn">Adicionar Despesa</button>
     </header>
 
-    <!-- Formulário para Adicionar Despesa -->
-    <div v-if="showNewExpenseForm" class="add-expense-form">
+    <!-- Formulário para adicionar nova despesa -->
+    <div v-if="showNewExpenseForm" class="form-container">
       <h2>Nova Despesa</h2>
       <form @submit.prevent="addExpense">
         <div class="form-control">
           <label for="date">Data</label>
-          <input v-model="newExpense.date" id="date" type="date" />
+          <input v-model="newExpense.date" id="date" type="date" required />
         </div>
         <div class="form-control">
           <label for="category">Categoria</label>
-          <select v-model="newExpense.category" id="category">
-            <option value="" disabled>Selecione</option>
-            <option value="Manutenção">Manutenção</option>
-            <option value="Combustível">Combustível</option>
-            <option value="Maquinário">Maquinário</option>
-            <option value="Agrotóxicos">Agrotóxicos</option>
-            <option value="Outros">Outros</option>
-          </select>
+          <input v-model="newExpense.category" id="category" type="text" placeholder="Categoria da despesa" required />
         </div>
         <div class="form-control">
           <label for="description">Descrição</label>
-          <input v-model="newExpense.description" id="description" type="text" placeholder="Descrição da despesa" />
+          <textarea v-model="newExpense.description" id="description" placeholder="Descrição da despesa" required></textarea>
         </div>
         <div class="form-control">
-          <label for="amount">Valor (R$)</label>
-          <input v-model="newExpense.amount" id="amount" type="number" step="0.01" placeholder="Valor da despesa" />
-        </div>
-        <div class="form-control">
-          <label for="paymentMethod">Forma de Pagamento</label>
-          <select v-model="newExpense.paymentMethod" id="paymentMethod">
-            <option value="" disabled>Selecione</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Cartão">Cartão</option>
-            <option value="Transferência">Transferência</option>
-          </select>
+          <label for="amount">Valor</label>
+          <input v-model="newExpense.amount" id="amount" type="number" step="0.01" required />
         </div>
         <div class="form-buttons">
-          <button type="submit" class="btn">Adicionar</button>
+          <button type="submit" class="btn">Salvar</button>
           <button type="button" class="btn cancel" @click="showNewExpenseForm = false">Cancelar</button>
         </div>
       </form>
     </div>
 
-    <!-- Resumo Estatístico -->
-    <div class="summary">
-      <div class="stat-card red">
-        <h3>Total de Despesas</h3>
-        <p>R$ {{ totalDespesas.toFixed(2) }}</p>
-      </div>
-    </div>
-
-    <!-- Tabela de Despesas -->
-    <div class="expenses-table">
+    <!-- Lista de Despesas -->
+    <div class="expenses-list">
+      <h2>Despesas Registradas</h2>
       <table>
         <thead>
           <tr>
             <th>Data</th>
             <th>Categoria</th>
             <th>Descrição</th>
-            <th>Valor (R$)</th>
-            <th>Forma de Pagamento</th>
+            <th>Valor</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(expense, index) in expenses" :key="index">
-            <td>{{ expense.date }}</td>
+          <tr v-for="expense in expenses" :key="expense.id">
+            <td>{{ expense.date.substring(0, 10).split('-').reverse().join('/') }}</td>
             <td>{{ expense.category }}</td>
             <td>{{ expense.description }}</td>
-            <td>{{ parseFloat(expense.amount).toFixed(2) }}</td>
-            <td>{{ expense.paymentMethod }}</td>
+            <td>R$ {{ parseFloat(expense.amount).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') }}</td>
           </tr>
         </tbody>
       </table>
@@ -132,13 +124,13 @@ const totalDespesas = computed(() =>
 
 <style scoped>
 /* Layout Geral */
-.dashboard-container {
+.expenses-page {
   height: 100vh;
-  justify-content: center;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   padding: 20px;
-  font-family: 'Georgia', serif;
+  font-family: Arial, sans-serif;
   background-color: #f3ebe4; /* Fundo bege claro */
 }
 
@@ -151,16 +143,11 @@ const totalDespesas = computed(() =>
 }
 
 .header h1 {
-  font-size: 28px;
+  font-size: 24px;
   color: #6f4e37; /* Marrom escuro */
 }
 
-.header-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
+.header button {
   padding: 10px 20px;
   background-color: #8b5e3c; /* Marrom café */
   color: white;
@@ -170,32 +157,26 @@ const totalDespesas = computed(() =>
   cursor: pointer;
 }
 
-.btn:hover {
-  background-color: #6f4e37;
+.header button:hover {
+  background-color: #6f4e37; /* Tom mais escuro */
 }
 
-.btn.cancel {
-  background-color: #e74c3c;
-}
-
-.btn.cancel:hover {
-  background-color: #c0392b;
-}
-
-/* Formulário de Adicionar Despesa */
-.add-expense-form {
-    position: absolute;
-    left: 82%;
+/* Formulário para Adicionar Despesa */
+.form-container {
+  position: absolute;
   background-color: #fffaf0; /* Fundo bege claro */
   padding: 20px;
+  border: 1px solid #8b5e3c; /* Bordas marromRGBO */
+  width: 400px;
+  left: 79%;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 
-.add-expense-form h2 {
+.form-container h2 {
   margin-bottom: 20px;
-  color: #6f4e37;
+  color: #6f4e37; /* Marrom escuro */
 }
 
 .form-control {
@@ -203,85 +184,95 @@ const totalDespesas = computed(() =>
 }
 
 .form-control label {
+  display: block;
+  font-weight: bold;
   margin-bottom: 5px;
-  color: #6f4e37;
+  color: #6f4e37; /* Marrom escuro */
 }
 
-input,
-select {
-  padding: 10px;
-  border: 1px solid #8b5e3c;
+.form-control input,
+.form-control select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #8b5e3c; /* Bordas marrom café */
   border-radius: 5px;
-  background-color: #f9f4ef;
-  color: #6f4e37;
+  background-color: #f9f4ef; /* Fundo bege claro */
+  color: #6f4e37; /* Texto marrom escuro */
 }
 
-input:focus,
-select:focus {
+.form-control input:focus,
+.form-control select:focus {
   outline: none;
-  border-color: #6f4e37;
+  border-color: #6f4e37; /* Marrom escuro no foco */
 }
 
-/* Botões do Formulário */
 .form-buttons {
   display: flex;
   gap: 10px;
 }
 
-/* Resumo Estatístico */
-.summary {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  flex: 1;
-  background-color: #f9f4ef; /* Fundo bege claro */
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.stat-card h3 {
-  font-size: 18px;
-  color: #6f4e37;
-}
-
-.stat-card p {
-  font-size: 20px;
+.form-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
   font-weight: bold;
-  color: #333;
+  color: white;
+  cursor: pointer;
 }
 
-/* Tabela de Despesas */
-.expenses-table {
-  background-color: #fffaf0;
+.form-buttons .btn {
+  background-color: #8b5e3c; /* Marrom café */
+}
+
+.form-buttons .btn:hover {
+  background-color: #6f4e37; /* Marrom escuro */
+}
+
+.form-buttons .btn.cancel {
+  background-color: #e74c3c; /* Vermelho cancelamento */
+}
+
+.form-buttons .btn.cancel:hover {
+  background-color: #c0392b; /* Vermelho escuro */
+}
+
+/* Lista de Despesas */
+.expenses-list {
+  background-color: #fffaf0; /* Fundo bege claro */
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.expenses-table table {
+.expenses-list h2 {
+  margin-bottom: 20px;
+  color: #6f4e37; /* Marrom escuro */
+}
+
+.expenses-list table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.expenses-table th,
-.expenses-table td {
+.expenses-list th,
+.expenses-list td {
   padding: 12px 15px;
   text-align: left;
-  border-bottom: 1px solid #d3cbb8;
+  border-bottom: 1px solid #d3cbb8; /* Bege suave */
 }
 
-.expenses-table th {
-  background-color: #6f4e37;
-  color: white;
+.expenses-list th {
+  background-color: #6f4e37; /* Fundo marrom escuro */
+  color: white; /* Texto branco */
   font-size: 14px;
 }
 
-.expenses-table tr:hover {
-  background-color: #f3ebe4;
+.expenses-list tr:hover {
+  background-color: #f3ebe4; /* Fundo bege claro no hover */
 }
+
+.expenses-list td {
+  color: #6f4e37; /* Marrom escuro */
+}
+
 </style>

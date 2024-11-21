@@ -41,12 +41,6 @@ import { RouterLink } from 'vue-router';
                 <p>Relatório</p>
             </div>
         </RouterLink>
-        <RouterLink to="/relatorio">
-            <div class="label">
-                <img src="../assets/IconsMenu/logout.png" alt="">
-                <p>Logout</p>
-            </div>
-        </RouterLink>
 
     </div>
 </template>

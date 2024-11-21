@@ -3,11 +3,11 @@
         <div class="container">
             <div class="dropdown" @mouseover="toggleDropdown" @mouseleave="toggleDropdown">
                 <button class="dropdown-btn">
-                    <span> Olá {{ captalizeFistLetter(userName) }}</span>
+                    <span> Olá {{ userName }}</span>
                 </button>
                 <div class="dropdown-content" v-if="dropdownVisible">
-                    <a href="#">My Account</a>
-                    <a class="logout" @click="logout">Logout</a>
+                    <a href="#">Minha Conta</a>
+                    <a class="logout" @click="logout">Sair</a>
                 </div>
             </div>
         </div>
@@ -15,32 +15,42 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import axios from 'axios';
 
 const route = useRoute();
-const dropdownVisible = ref(true);
+const dropdownVisible = ref(false);
 const isLogin = ref(false);
 const isRegister = ref(false);
-const userData = JSON.parse(localStorage.getItem('userName') || '{}');
-const userName = ref(userData.name || 'Visitante');
+const userName = ref('');
 
-
-function captalizeFistLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-}
+const storedCpf = localStorage.getItem('loggedCpf');
+const fetchUserName = async () => {
+  if (storedCpf) {
+    try {
+      const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
+      userName.value = response.data.name; // Nome retornado do backend
+    } catch (error) {
+      console.error('Erro ao buscar nome do usuário:', error.response?.data || error.message);
+    }
+  }
+};
+onMounted(() => {
+  fetchUserName();
+});
 
 watch(route, (newRoute) => {
-    isLogin.value = newRoute.path === '/';
-    isRegister.value = newRoute.path === '/register';
+  isLogin.value = newRoute.path === '/';
+  isRegister.value = newRoute.path === '/register';
 });
+
 function logout() {
-
-    window.location.replace('/');
+  localStorage.removeItem('loggedCpf');
+  window.location.replace('/'); 
 }
-
 function toggleDropdown() {
-    dropdownVisible.value = dropdownVisible.value;
+  dropdownVisible.value = true;
 }
 </script>
 
@@ -63,19 +73,6 @@ span {
     align-items: center;
     justify-content: space-between;
     max-width: 1920px;
-}
-
-.logo {
-    margin-left: 1000px;
-    display: flex;
-    align-items: center;
-    height: 20px;
-    transition: calc(.3s);
-
-    img {
-        height: 200px;
-        width: 200px;
-    }
 }
 
 .dropdown {

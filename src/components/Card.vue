@@ -5,8 +5,8 @@
         </div>
         <div class="card-content">
             <h3>{{ title }}</h3>
-            <p class="value" :style="{ color: textColor() }">{{ totalSales }}</p>
-            <p class="description">{{ description }}</p>
+            <p class="value" :style="{color: textColor()}">{{totalSales}}</p>
+            <p class="description">{{description}}</p>
         </div>
     </div>
 </template>
@@ -26,14 +26,15 @@ const textColor = () => {
 
 <style scoped>
 .card {
-    background: #dab378;
+    background: #F5F5DC;
     border-radius: 8px;
     box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.316);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 30px;
-    width: 290px;
+    height: 310px;
+    width: 350px;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
@@ -54,7 +55,7 @@ const textColor = () => {
 .card h3 {
     font-size: 2rem;
     font-weight: bolder;
-    color: #ffffff;
+    color: #000000;
     margin: 0;
 }
 

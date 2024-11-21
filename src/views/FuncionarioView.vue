@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 // Dados do formulário
 const employeeData = ref({
@@ -10,6 +11,7 @@ const employeeData = ref({
   address: '',
   cpfOrCnpj: '',
   admissionDate: '',
+  password: '', // Adiciona senha para cadastro no login
 });
 
 const employees = ref([]);
@@ -17,7 +19,8 @@ const employees = ref([]);
 // Aba ativa
 const activeTab = ref('cadastro');
 
-const addEmployee = () => {
+// Função para adicionar funcionário e login
+const addEmployee = async () => {
   if (
     employeeData.value.name &&
     employeeData.value.position &&
@@ -25,19 +28,45 @@ const addEmployee = () => {
     employeeData.value.gender &&
     employeeData.value.address &&
     employeeData.value.cpfOrCnpj &&
-    employeeData.value.admissionDate
+    employeeData.value.admissionDate &&
+    employeeData.value.password // Verifica se a senha foi preenchida
   ) {
-    employees.value.push({ ...employeeData.value });
+    try {
+      // Faz POST no backend para salvar o funcionário
+      await axios.post('http://localhost:5000/employees', employeeData.value);
 
-    // Limpa os campos
-    Object.keys(employeeData.value).forEach((key) => {
-      employeeData.value[key] = '';
-    });
-    alert('Funcionário cadastrado com sucesso!');
+      // Atualiza a lista de funcionários
+      await fetchEmployees();
+
+      // Limpa os campos do formulário
+      Object.keys(employeeData.value).forEach((key) => {
+        employeeData.value[key] = '';
+      });
+      alert('Funcionário e login cadastrados com sucesso!');
+    } catch (error) {
+      console.error('Erro ao cadastrar funcionário:', error);
+      alert('Erro ao cadastrar funcionário.');
+    }
   } else {
     alert('Preencha todos os campos!');
   }
 };
+
+// Função para buscar todos os funcionários
+const fetchEmployees = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/employees');
+    employees.value = response.data;
+  } catch (error) {
+    console.error('Erro ao buscar funcionários:', error);
+    alert('Erro ao buscar funcionários.');
+  }
+};
+
+// Carrega a lista de funcionários ao montar o componente
+onMounted(() => {
+  fetchEmployees();
+});
 </script>
 
 <template>
@@ -48,7 +77,6 @@ const addEmployee = () => {
       <button :class="{ active: activeTab === 'cadastrados' }" @click="activeTab = 'cadastrados'">Funcionários Cadastrados</button>
     </div>
 
-    <!-- Conteúdo das abas com transição -->
     <div class="tab-content">
       <transition name="fade">
         <div v-if="activeTab === 'cadastro'" key="cadastro" class="tab-pane">
@@ -87,19 +115,23 @@ const addEmployee = () => {
               <label for="admissionDate">Data de Admissão</label>
               <input v-model="employeeData.admissionDate" id="admissionDate" type="date" />
             </div>
+            <div class="form-control">
+              <label for="password">Senha</label>
+              <input v-model="employeeData.password" id="password" type="password" placeholder="Digite a senha" />
+            </div>
             <button type="submit">Cadastrar Funcionário</button>
           </form>
         </div>
       </transition>
 
       <transition name="fade">
-        <div v-if="activeTab === 'cadastrados'" key="cadastrados" class="tab-pane">
+        <div v-if="activeTab === 'cadastrados'" key="cadastrados" class="tab-panee">
           <h1>Funcionários Cadastrados</h1>
           <div v-if="employees.length" class="employee-list">
             <ul>
               <li v-for="(employee, index) in employees" :key="index">
                 <strong>{{ employee.name }}</strong> - {{ employee.position }} - R$ {{ employee.salary }} - 
-                {{ employee.gender }} - {{ employee.address }} - {{ employee.cpfOrCnpj }} - {{ employee.admissionDate }}
+                {{ employee.gender }} - {{ employee.address }} - {{ employee.cpfOrCnpj }} - {{ employee.admissionDate.split('T')[0] }}
               </li>
             </ul>
           </div>
@@ -111,17 +143,22 @@ const addEmployee = () => {
 </template>
 
 <style scoped>
-/* Layout geral */
+/* Estilo mantém o mesmo */
 .employee-manager {
   height: 100vh;
   display: flex;
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  background-color: #f3ebe4; /* Fundo bege claro */
+  background-color: #f3ebe4;
   padding: 20px;
 }
 
+.tab-pane {
+  h1 {
+    margin-bottom: 20px;
+  }
+}
 .tabs {
   display: flex;
   gap: 20px;
@@ -131,15 +168,15 @@ const addEmployee = () => {
 .tabs button {
   padding: 10px 20px;
   border: none;
-  background-color: #8b5e3c; /* Marrom café */
+  background-color: #8b5e3c;
   cursor: pointer;
   border-radius: 5px;
   font-weight: bold;
-  color: white; /* Texto branco */
+  color: white;
 }
 
 .tabs button:hover {
-  background-color: #6f4e37; /* Tom mais escuro */
+  background-color: #6f4e37;
 }
 
 .tabs button.active {
@@ -150,7 +187,7 @@ const addEmployee = () => {
 .tab-content {
   width: 100%;
   max-width: 600px;
-  background-color: #fffaf0; /* Fundo bege claro */
+  background-color: #fffaf0;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
@@ -160,32 +197,18 @@ const addEmployee = () => {
   display: flex;
   flex-direction: column;
   margin-bottom: 15px;
-}
-
-.form-control label {
-  font-weight: bold;
-  color: #6f4e37; /* Marrom escuro */
-}
-
-input,
-select {
-  padding: 10px;
-  border: 1px solid #8b5e3c; /* Bordas marrom café */
-  border-radius: 5px;
-  background-color: #f9f4ef; /* Fundo bege suave */
-  color: #6f4e37; /* Texto marrom escuro */
-}
-
-input:focus,
-select:focus {
-  outline: none;
-  border-color: #6f4e37; /* Marrom escuro no foco */
+  input {
+    height: 40px;
+    padding: 10px;
+    border: 1px solid #8b5e3c;
+    border-radius: 5px;
+  }
 }
 
 button {
   padding: 10px;
   border: none;
-  background-color: #8b5e3c; /* Marrom café */
+  background-color: #8b5e3c;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -197,32 +220,21 @@ button:hover {
 }
 
 .employee-list {
+  li {
+    margin-bottom: 10px;
+    background-color: #8b5e3c;
+    padding: 10px;
+    color: white;
+    font-size: 20px;
+    border: 1px solid #8b5e3c;
+    border-radius: 5px;
+    list-style-type: none;
+  }
   margin-top: 20px;
-  background-color: #fffaf0; /* Fundo bege claro */
-  border: 1px solid #8b5e3c; /* Bordas marrom café */
+  background-color: #ddc492;
+  border: 1px solid #8b5e3c;
   border-radius: 5px;
   padding: 10px;
 }
 
-.employee-list ul {
-  list-style: none;
-  padding: 0;
-}
-
-.employee-list li {
-  margin-bottom: 10px;
-  color: #6f4e37; /* Texto marrom escuro */
-}
-
-/* Animação de fade para as abas */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease-in-out;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>
-
