@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./db/db');
-const { isAdmin } = require('./middlewares'); // Importa o middleware
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +12,10 @@ app.use(express.json());
 // Rota de login
 app.post('/login', (req, res) => {
     const { cpf, password } = req.body;
+
+    if (!cpf || !password) {
+        return res.status(400).send('CPF e senha são obrigatórios.');
+    }
 
     const sql = 'SELECT * FROM employees WHERE cpfOrCnpj = ? AND password = ?';
     db.query(sql, [cpf, password], (err, results) => {
@@ -28,15 +31,10 @@ app.post('/login', (req, res) => {
         const user = results[0];
         res.status(200).json({
             message: 'Login realizado com sucesso!',
-            user: {
-                id: user.id,
-                name: user.name,
-                isAdmin: user.isAdmin,
-            },
+            employeeId: user.id, // Retorna o ID do funcionário
         });
     });
 });
-
 // Rota para buscar todos os funcionários
 app.get('/employees', (req, res) => {
     db.query('SELECT * FROM employees ORDER BY createdAt DESC', (err, results) => {
@@ -220,7 +218,7 @@ app.get('/employees/total', (req, res) => {
         res.json({ total: results[0].total }); // Retorna o total de funcionários
     });
 });
-// ------------------------------------------GERAL-----------------------
+
 app.get('/sales/total', (req, res) => {
     const sql = 'SELECT SUM(total) AS total FROM sales';
     db.query(sql, (err, results) => {
@@ -246,59 +244,105 @@ app.get('/expenses/total', (req, res) => {
     });
 });
 
-// Rota restrita para listar todos os usuários (admin somente)
-app.get('/admin/employees', isAdmin, (req, res) => {
-    const sql = 'SELECT * FROM employees ORDER BY createdAt DESC';
+app.post('/employees/:employeeId/plantios', (req, res) => {
+    const { employeeId } = req.params;
+    const { variety, plantingDate } = req.body;
+
+    if (!variety || !plantingDate) {
+        return res.status(400).send('Variedade e data de plantio são obrigatórias.');
+    }
+
+    // Calcula a data estimada de colheita (8 meses após o plantio)
+    const plantingDateObj = new Date(plantingDate);
+    const estimatedHarvestDate = new Date(plantingDateObj.setMonth(plantingDateObj.getMonth() + 8));
+
+    // Insere o plantio no banco de dados
+    db.query(
+        `INSERT INTO plantios (employeeId, variety, plantingDate, estimatedHarvestDate) VALUES (?, ?, ?, ?)`,
+        [employeeId, variety, plantingDate, estimatedHarvestDate],
+        (err) => {
+            if (err) {
+                console.error('Erro ao cadastrar plantio:', err);
+                return res.status(500).send('Erro ao cadastrar plantio.');
+            }
+            res.status(201).send('Plantio cadastrado com sucesso!');
+        }
+    );
+});
+
+// Buscar todos os plantios
+app.get('/employees/:employeeId/plantios', (req, res) => {
+    const { employeeId } = req.params;
+
+    db.query(
+        `SELECT * FROM plantios WHERE employeeId = ? ORDER BY plantingDate DESC`,
+        [employeeId],
+        (err, results) => {
+            if (err) {
+                console.error('Erro ao buscar plantios:', err);
+                return res.status(500).send('Erro ao buscar plantios.');
+            }
+            res.status(200).json(results);
+        }
+    );
+});
+app.get('/plantios/total', (req, res) => {
+    const sql = 'SELECT COUNT(*) AS total FROM plantios';
+
     db.query(sql, (err, results) => {
         if (err) {
-            console.error('Erro ao buscar usuários:', err);
-            return res.status(500).send('Erro ao buscar usuários.');
+            console.error('Erro ao buscar total geral de plantios:', err);
+            return res.status(500).send('Erro ao buscar total geral de plantios.');
         }
-        res.status(200).json(results);
+
+        res.status(200).json(results[0]);
     });
 });
 
-// Rota para excluir usuário (admin somente)
-app.delete('/admin/employees/:id', isAdmin, (req, res) => {
-    const { id } = req.params;
+// Rota para buscar o total de plantios por usuário
+app.get('/employees/:employeeId/plantios/total', (req, res) => {
+    const { employeeId } = req.params;
+    const sql = 'SELECT COUNT(*) AS total FROM plantios WHERE employeeId = ?';
 
-    const sql = 'DELETE FROM employees WHERE id = ?';
-    db.query(sql, [id], (err) => {
+    db.query(sql, [employeeId], (err, results) => {
         if (err) {
-            console.error('Erro ao excluir usuário:', err);
-            return res.status(500).send('Erro ao excluir usuário.');
+            console.error('Erro ao buscar total de plantios do funcionário:', err);
+            return res.status(500).send('Erro ao buscar total de plantios do funcionário.');
         }
-        res.status(200).send('Usuário excluído com sucesso!');
+
+        res.status(200).json(results[0]);
     });
 });
+app.get('/report', async (req, res) => {
+    try {
+        const [totalSales] = await db.promise().query('SELECT SUM(total) AS totalSales FROM sales');
+        const [totalExpenses] = await db.promise().query('SELECT SUM(amount) AS totalExpenses FROM expenses');
+        const [totalPlantios] = await db.promise().query('SELECT COUNT(*) AS totalPlantios FROM plantios');
+        const [totalEmployees] = await db.promise().query('SELECT COUNT(*) AS totalEmployees FROM employees');
+        const [salesHistory] = await db.promise().query('SELECT id, date, client, total FROM sales ORDER BY date DESC');
+        const [expensesHistory] = await db.promise().query('SELECT id, date, category, amount AS total FROM expenses ORDER BY date DESC');
+        const [plantiosHistory] = await db.promise().query(`SELECT id, date type, harvest_estimate FROM plantios ORDER BY date DESC`);
 
-// Rota para excluir vendas (admin somente)
-app.delete('/admin/sales/:id', isAdmin, (req, res) => {
-    const { id } = req.params;
+        const profit = totalSales[0].totalSales - totalExpenses[0].totalExpenses;
+        const profitPerEmployee = totalEmployees[0].totalEmployees > 0 ? (profit / totalEmployees[0].totalEmployees) : 0;
 
-    const sql = 'DELETE FROM sales WHERE id = ?';
-    db.query(sql, [id], (err) => {
-        if (err) {
-            console.error('Erro ao excluir venda:', err);
-            return res.status(500).send('Erro ao excluir venda.');
-        }
-        res.status(200).send('Venda excluída com sucesso!');
-    });
+        res.json({
+            totalSales: totalSales[0].totalSales || 0,
+            totalExpenses: totalExpenses[0].totalExpenses || 0,
+            profit: profit || 0,
+            totalPlantios: totalPlantios[0].totalPlantios || 0,
+            totalEmployees: totalEmployees[0].totalEmployees || 0,
+            profitPerEmployee: profitPerEmployee || 0,
+            salesHistory: salesHistory || [],
+            expensesHistory: expensesHistory || [],
+            plantiosHistory: plantiosHistory || [],
+        });
+    } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        res.status(500).send('Erro ao gerar relatório.');
+    }
 });
 
-// Rota para excluir despesas (admin somente)
-app.delete('/admin/expenses/:id', isAdmin, (req, res) => {
-    const { id } = req.params;
-
-    const sql = 'DELETE FROM expenses WHERE id = ?';
-    db.query(sql, [id], (err) => {
-        if (err) {
-            console.error('Erro ao excluir despesa:', err);
-            return res.status(500).send('Erro ao excluir despesa.');
-        }
-        res.status(200).send('Despesa excluída com sucesso!');
-    });
-});
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

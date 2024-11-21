@@ -29,7 +29,7 @@ import { RouterLink } from 'vue-router';
                 <p>Funcionários</p>
             </div>
         </RouterLink>
-        <RouterLink to="/relatorio">
+        <RouterLink to="/plantio">
             <div class="label">
                 <img src="../assets/IconsMenu/Plantio.png" alt="">
                 <p>Plantio</p>

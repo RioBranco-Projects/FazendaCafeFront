@@ -34,7 +34,7 @@
           <button type="submit" class="login-button">Entrar</button>
         </form>
         <p class="register-link">
-          <router-link to="/register">Esqueci minha senha</router-link>
+          <router-link to="/forget">Esqueci minha senha</router-link>
         </p>
         <p class="error-message">{{ errorMessage }}</p>
         <p class="sucess-message">{{ sucessMessage }}</p>
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -63,6 +63,7 @@ const handleLogin = async () => {
     if (response.status === 200) {
       localStorage.setItem('employeeId', response.data.employeeId);
       localStorage.setItem('loggedCpf', cpf.value);
+      console.log(response.data);
       sucessMessage.value = 'Login realizado com sucesso!';
       setTimeout(() => {
         router.push('/home');
@@ -73,6 +74,33 @@ const handleLogin = async () => {
     setTimeout(() => (errorMessage.value = ''), 1500);
   }
 };
+const fetchEmployeeId = async () => {
+  const storedCpf = localStorage.getItem('loggedCpf'); // Verifica se o CPF está armazenado
+  if (!storedCpf) {
+    console.error('Erro: CPF não encontrado no localStorage.');
+    return; // Se o CPF não estiver no localStorage, a função é encerrada
+  }
+
+  if (!localStorage.getItem('employeeId')) {
+    try {
+      const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
+      
+      // Verifica se o response contém os dados necessários
+      if (response.status === 200 && response.data.employeeId) {
+        localStorage.setItem('employeeId', response.data.employeeId); // Salva o employeeId
+        console.log('EmployeeId salvo com sucesso:', response.data.employeeId);
+      } else {
+        console.error('Erro: EmployeeId não retornado pelo backend.');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar employeeId:', error);
+    }
+  }
+};
+onMounted(async () => {
+  await fetchEmployeeId();
+  console.log('Componente montado e employeeId carregado.');
+});
 </script>
 
 <style scoped>

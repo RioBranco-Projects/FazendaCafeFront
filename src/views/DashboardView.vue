@@ -10,11 +10,13 @@ const employeeId = ref(localStorage.getItem('employeeId'));
 const totalSales = ref(0);
 const totalExpenses = ref(0);
 const profit = ref(0);
+const totalPlantios = ref(0);
 
 // Variáveis para os totais gerais
 const totalSalesGeneral = ref(0);
 const totalExpensesGeneral = ref(0);
 const profitGeneral = ref(0);
+const totalPlantiosGeneral = ref(0);
 
 // Variável para total de funcionários
 const totalUsers = ref(0);
@@ -47,6 +49,14 @@ const fetchDashboardData = async () => {
     // Total de funcionários cadastrados
     const usersResponse = await axios.get('http://localhost:5000/employees');
     totalUsers.value = usersResponse.data.length;
+
+    // Total de plantios do funcionário
+    const plantiosResponse = await axios.get(`http://localhost:5000/employees/${employeeId.value}/plantios/total`);
+    totalPlantios.value = plantiosResponse.data.total;
+
+    // Total geral de plantios
+    const plantiosGeneralResponse = await axios.get('http://localhost:5000/plantios/total');
+    totalPlantiosGeneral.value = plantiosGeneralResponse.data.total;
   } catch (error) {
     console.error('Erro ao buscar dados do dashboard:', error);
     alert('Erro ao carregar dados do dashboard.');
@@ -58,6 +68,7 @@ onMounted(() => {
   fetchDashboardData();
 });
 </script>
+
 <template>
   <section class="dashboard">
     <!-- Cards para os totais individuais -->
@@ -86,14 +97,22 @@ onMounted(() => {
           description="Lucro calculado (vendas - despesas) do funcionário logado"
         />
       </div>
+      <div class="card">
+        <Card
+          title="Plantios (Usuário)"
+          img="/src/assets/IconsMenu/Plantio.png"
+          :totalSales="`${totalPlantios} Plantios`"
+          description="Total de plantios registrados pelo funcionário logado"
+        />
+      </div>
     </div>
-    
+
     <!-- Totais gerais -->
     <div class="general-totals">
-        <h2>Totais Gerais</h2>
-        <div class="general-boxes">
+      <h2>Totais Gerais</h2>
+      <div class="general-boxes">
         <div class="card">
-            <Card
+          <Card
             title="Vendas (Geral)"
             img="/src/assets/IconsMenu/Sales.png"
             :totalSales="`R$ ${totalSalesGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`"
@@ -101,7 +120,7 @@ onMounted(() => {
           />
         </div>
         <div class="card">
-            <Card
+          <Card
             title="Despesas (Geral)"
             img="/src/assets/IconsMenu/Dashboard.png"
             :totalSales="`R$ ${totalExpensesGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`"
@@ -109,7 +128,7 @@ onMounted(() => {
           />
         </div>
         <div class="card">
-            <Card
+          <Card
             title="Lucro (Geral)"
             img="/src/assets/IconsMenu/lucro.png"
             :totalSales="`R$ ${profitGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`"
@@ -118,17 +137,16 @@ onMounted(() => {
         </div>
         <div class="card">
           <Card
-            title="Funcionários"
-            img="/src/assets/IconsMenu/funcionario.png"
-            :totalSales="`${totalUsers} Colaboradores`"
-            description="Número total de funcionários cadastrados"
+            title="Plantios (Geral)"
+            img="/src/assets/IconsMenu/Plantio.png"
+            :totalSales="`${totalPlantiosGeneral} Plantios`"
+            description="Total de plantios registrados no sistema"
           />
         </div>
       </div>
     </div>
   </section>
 </template>
-
 
 <style scoped>
 .dashboard {

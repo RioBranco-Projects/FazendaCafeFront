@@ -11,6 +11,9 @@
                 </div>
             </div>
         </div>
+        <div class="dataAtual">
+            <p>{{ dataAtual }}</p>
+        </div>
     </header>
 </template>
 
@@ -40,12 +43,19 @@ onMounted(() => {
   fetchUserName();
 });
 
+const data = new Date();
+const dia = data.getDate();
+const mes = data.getMonth() + 1;
+const ano = data.getFullYear();
+const dataAtual = `${dia}/${mes}/${ano}`;
+
 watch(route, (newRoute) => {
   isLogin.value = newRoute.path === '/';
   isRegister.value = newRoute.path === '/register';
 });
 
 function logout() {
+  localStorage.removeItem('employeeId');
   localStorage.removeItem('loggedCpf');
   window.location.replace('/'); 
 }
@@ -60,12 +70,20 @@ span {
 }
 
 .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: fixed;
     width: 100%;
     z-index: 2;
     height: auto;
     box-sizing: inherit;
     background-color: #f5f5dc;
+    .dataAtual{
+        font-weight: bolder;
+        font-size: 25px;
+        margin-right: 20px;
+    }
 }
 
 .container {
