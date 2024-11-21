@@ -33,9 +33,6 @@
           </div>
           <button type="submit" class="login-button">Entrar</button>
         </form>
-        <p class="register-link">
-          <router-link to="/forget">Esqueci minha senha</router-link>
-        </p>
         <p class="error-message">{{ errorMessage }}</p>
         <p class="sucess-message">{{ sucessMessage }}</p>
       </div>

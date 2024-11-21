@@ -22,6 +22,6 @@ import MenuLateral from '../components/MenuLateral.vue';
 .sla {
     overflow: hidden;
     width: 100%;
-    background-color: #fff;
+    background-color: #9f8961;
 }
 </style>

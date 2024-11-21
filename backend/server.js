@@ -340,6 +340,53 @@ app.get('/report', async (req, res) => {
         res.status(500).send('Erro ao gerar relatório.');
     }
 });
+app.get('/employees/:employeeId/expenses/monthly', (req, res) => {
+    const { employeeId } = req.params;
+
+    const sql = `
+    SELECT 
+      DATE_FORMAT(date, '%Y-%m') AS month, 
+      SUM(amount) AS totalExpenses
+    FROM expenses
+    WHERE employeeId = ?
+    GROUP BY month
+    ORDER BY month DESC
+    LIMIT 2;
+  `;
+
+    db.query(sql, [employeeId], (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar despesas mensais:', err);
+            return res.status(500).send('Erro ao buscar despesas mensais.');
+        }
+        res.status(200).json(results);
+    });
+});
+// Rota para buscar vendas mensais de um funcionário
+app.get('/employees/:employeeId/sales/monthly', (req, res) => {
+    const { employeeId } = req.params;
+
+    const sql = `
+    SELECT 
+      DATE_FORMAT(date, '%Y-%m') AS month, 
+      SUM(total) AS totalSales
+    FROM sales
+    WHERE employeeId = ?
+    GROUP BY month
+    ORDER BY month DESC
+    LIMIT 2;
+  `;
+
+    db.query(sql, [employeeId], (err, results) => {
+        if (err) {
+            console.error('Erro ao buscar vendas mensais:', err);
+            return res.status(500).send('Erro ao buscar vendas mensais.');
+        }
+
+        res.status(200).json(results);
+    });
+});
+
 
 // Inicia o servidor
 app.listen(PORT, () => {

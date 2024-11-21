@@ -33,8 +33,8 @@ const textColor = () => {
     flex-direction: column;
     align-items: center;
     padding: 30px;
-    height: 310px;
-    width: 350px;
+    height: auto;
+    width: auto;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 

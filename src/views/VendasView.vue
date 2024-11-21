@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import Card from '@/components/Card.vue';
 import axios from 'axios';
+import ChartView from '@/components/ChartView.vue';
 const userName = ref('');
 const storedCpf = localStorage.getItem('loggedCpf');
 const fetchUserName = async () => {
@@ -37,6 +39,20 @@ const fetchSales = async () => {
   }
 };
 
+const totalSales = ref(0);
+const fetchDashboardData = async () => {
+  try {
+    const salesResponse = await axios.get(`http://localhost:5000/employees/${employeeId.value}/sales/total`);
+    totalSales.value = salesResponse.data.total;
+  } catch (error) {
+    console.error('Erro ao buscar dados do dashboard:', error);
+    alert('Erro ao carregar dados do dashboard.');
+  }
+};
+onMounted(() => {
+  fetchDashboardData();
+});
+
 const addSale = async () => {
   try {
     const response = await axios.post(`http://localhost:5000/employees/${employeeId.value}/sales`, {
@@ -61,6 +77,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="sales-page">
+    
     <header class="header">
       <h1>Vendas do {{ userName }}</h1>
       <button @click="showNewSaleForm = true" class="btn">Adicionar Venda</button>
@@ -126,6 +143,15 @@ onMounted(() => {
         </tbody>
       </table>
     </div>
+    <div class="card">
+      <Card
+        title="Vendas (Usuário)"
+        img="/src/assets/IconsMenu/Sales.png"
+        :totalSales="`R$ ${totalSales.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`"
+        description="Total de vendas realizadas pelo funcionário logado"
+      />
+      <ChartView/>
+    </div>
   </div>
 </template>
 <style scoped>
@@ -143,6 +169,13 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+.card {
+  justify-content: center;
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  gap: 50px;
 }
 .header h1 {
   font-size: 24px;
@@ -234,6 +267,8 @@ onMounted(() => {
 }
 .sales-list {
   background-color: #fffaf0;
+  max-height: 400px; /* Define uma altura máxima para o container */
+  overflow-y: auto; /* Adiciona scroll vertical quando necessário */
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -260,6 +295,8 @@ onMounted(() => {
   background-color: #6f4e37;
   color: white; 
   font-size: 14px;
+  top: 0; /* Mantém o cabeçalho fixo ao fazer scroll */
+  z-index: 1; /* Garante que o cabeçalho fique sobre as linhas */
 }
 
 .sales-list tr:hover {

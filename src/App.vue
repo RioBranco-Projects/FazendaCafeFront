@@ -20,6 +20,7 @@ import Header from './components/Header.vue'
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 body {
+  background-color: #89624756;
   overflow: hidden;
 }
 .router-enter-from {
