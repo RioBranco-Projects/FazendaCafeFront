@@ -7,9 +7,7 @@ const plantingDate = ref('');
 const plantings = ref([]);
 const successMessage = ref('');
 const errorMessage = ref('');
-const employeeId = localStorage.getItem('employeeId'); // ID do funcionário logado
-
-// Função para cadastrar plantio
+const employeeId = localStorage.getItem('employeeId');
 const handlePlantingSubmit = async () => {
   try {
     const response = await axios.post(`http://localhost:5000/employees/${employeeId}/plantios`, {
@@ -17,7 +15,7 @@ const handlePlantingSubmit = async () => {
       plantingDate: plantingDate.value,
     });
     successMessage.value = response.data;
-    fetchPlantings(); // Atualiza a lista de plantios
+    fetchPlantings(); 
     variety.value = '';
     plantingDate.value = '';
   } catch (error) {
@@ -25,7 +23,6 @@ const handlePlantingSubmit = async () => {
   }
 };
 
-// Função para buscar todos os plantios
 const fetchPlantings = async () => {
   try {
     const response = await axios.get(`http://localhost:5000/employees/${employeeId}/plantios`);
@@ -35,8 +32,6 @@ const fetchPlantings = async () => {
     errorMessage.value = 'Erro ao buscar plantios.';
   }
 };
-
-// Carregar os plantios ao montar o componente
 onMounted(() => {
   fetchPlantings();
 });
@@ -74,7 +69,6 @@ onMounted(() => {
         <tbody>
           <tr v-for="planting in plantings" :key="planting.id">
             <td>{{ planting.variety }}</td>
-            <!--Formatar para data br-->
             <td>{{ new Date(planting.plantingDate).toLocaleDateString() }}</td>
             <td>{{ new Date(planting.estimatedHarvestDate).toLocaleDateString() }}</td>
           </tr>

@@ -204,7 +204,7 @@ app.get('/employees/:employeeId/expenses/total', (req, res) => {
             console.error('Erro ao buscar total de despesas por usuário:', err);
             return res.status(500).send('Erro ao buscar total de despesas por usuário.');
         }
-        res.json({ total: results[0].total || 0 }); // Retorna 0 se não houver despesas
+        res.json({ total: results[0].total || 0 });
     });
 });
 
@@ -215,7 +215,7 @@ app.get('/employees/total', (req, res) => {
             console.error('Erro ao buscar total de funcionários:', err);
             return res.status(500).send('Erro ao buscar total de funcionários.');
         }
-        res.json({ total: results[0].total }); // Retorna o total de funcionários
+        res.json({ total: results[0].total }); 
     });
 });
 
@@ -227,7 +227,7 @@ app.get('/sales/total', (req, res) => {
             return res.status(500).send('Erro ao buscar total geral de vendas.');
         }
 
-        const total = results[0].total || 0; // Retorna 0 se não houver vendas
+        const total = results[0].total || 0;
         res.status(200).json({ total });
     });
 });
@@ -239,7 +239,7 @@ app.get('/expenses/total', (req, res) => {
             return res.status(500).send('Erro ao buscar total geral de despesas.');
         }
 
-        const total = results[0].total || 0; // Retorna 0 se não houver despesas
+        const total = results[0].total || 0; 
         res.status(200).json({ total });
     });
 });
@@ -252,11 +252,9 @@ app.post('/employees/:employeeId/plantios', (req, res) => {
         return res.status(400).send('Variedade e data de plantio são obrigatórias.');
     }
 
-    // Calcula a data estimada de colheita (8 meses após o plantio)
     const plantingDateObj = new Date(plantingDate);
     const estimatedHarvestDate = new Date(plantingDateObj.setMonth(plantingDateObj.getMonth() + 8));
 
-    // Insere o plantio no banco de dados
     db.query(
         `INSERT INTO plantios (employeeId, variety, plantingDate, estimatedHarvestDate) VALUES (?, ?, ?, ?)`,
         [employeeId, variety, plantingDate, estimatedHarvestDate],

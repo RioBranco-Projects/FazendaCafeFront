@@ -5,7 +5,6 @@ import * as XLSX from 'xlsx';
 
 const reportData = ref(null);
 
-// Função para buscar os dados do relatório
 const fetchReportData = async () => {
   try {
     const response = await axios.get('http://localhost:5000/report');
@@ -16,7 +15,6 @@ const fetchReportData = async () => {
   }
 };
 
-// Função para exportar os dados para Excel
 const exportToExcel = () => {
   if (!reportData.value) return;
 
@@ -34,7 +32,6 @@ const exportToExcel = () => {
   XLSX.writeFile(workbook, 'relatorio_consolidado.xlsx');
 };
 
-// Monta o componente
 onMounted(() => {
   fetchReportData();
 });

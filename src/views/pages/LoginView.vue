@@ -75,20 +75,18 @@ const handleLogin = async () => {
   }
 };
 const fetchEmployeeId = async () => {
-  const storedCpf = localStorage.getItem('loggedCpf'); // Verifica se o CPF está armazenado
+  const storedCpf = localStorage.getItem('loggedCpf');
   if (!storedCpf) {
     console.error('Erro: CPF não encontrado no localStorage.');
-    return; // Se o CPF não estiver no localStorage, a função é encerrada
+    return;
   }
 
   if (!localStorage.getItem('employeeId')) {
     try {
       const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
-      
-      // Verifica se o response contém os dados necessários
       if (response.status === 200 && response.data.employeeId) {
-        localStorage.setItem('employeeId', response.data.employeeId); // Salva o employeeId
-        console.log('EmployeeId salvo com sucesso:', response.data.employeeId);
+        localStorage.setItem('employeeId', response.data.employeeId); 
+        console.log('EmployeeId salvo com sucesso:', response.data.employeeId)
       } else {
         console.error('Erro: EmployeeId não retornado pelo backend.');
       }

@@ -7,7 +7,7 @@ const fetchUserName = async () => {
   if (storedCpf) {
     try {
       const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
-      userName.value = response.data.name; // Nome retornado do backend
+      userName.value = response.data.name;
     } catch (error) {
       console.error('Erro ao buscar nome do usuário:', error.response?.data || error.message);
     }
@@ -16,9 +16,8 @@ const fetchUserName = async () => {
 onMounted(() => {
   fetchUserName();
 });
-// Pega o employeeId do localStorage
-const employeeId = ref(localStorage.getItem('employeeId')); // ID do funcionário logado
-const sales = ref([]); // Lista de vendas
+const employeeId = ref(localStorage.getItem('employeeId')); 
+const sales = ref([]);
 const newSale = ref({
   date: '',
   number: '',
@@ -27,11 +26,7 @@ const newSale = ref({
   total: '',
   invoice: '',
 });
-
-// Controle do formulário
 const showNewSaleForm = ref(false);
-
-// Função para buscar vendas do funcionário logado
 const fetchSales = async () => {
   try {
     const response = await axios.get(`http://localhost:5000/employees/${employeeId.value}/sales`);
@@ -42,24 +37,20 @@ const fetchSales = async () => {
   }
 };
 
-// Função para adicionar nova venda
 const addSale = async () => {
   try {
     const response = await axios.post(`http://localhost:5000/employees/${employeeId.value}/sales`, {
       ...newSale.value,
     });
-
-    alert(response.data); // Mostra mensagem de sucesso
-    fetchSales(); // Atualiza a lista de vendas
-    Object.keys(newSale.value).forEach((key) => (newSale.value[key] = '')); // Limpa o formulário
-    showNewSaleForm.value = false; // Fecha o formulário
+    alert(response.data);
+    fetchSales();
+    Object.keys(newSale.value).forEach((key) => (newSale.value[key] = ''));
+    showNewSaleForm.value = false;
   } catch (error) {
     console.error('Erro ao adicionar venda:', error);
     alert('Erro ao adicionar venda.');
   }
 };
-
-// Carregar vendas ao montar o componente
 onMounted(() => {
   if (!employeeId.value) {
     alert('Erro: Funcionário não autenticado.');
@@ -68,17 +59,12 @@ onMounted(() => {
   fetchSales();
 });
 </script>
-
-
-
 <template>
   <div class="sales-page">
     <header class="header">
       <h1>Vendas do {{ userName }}</h1>
       <button @click="showNewSaleForm = true" class="btn">Adicionar Venda</button>
     </header>
-
-    <!-- Formulário para adicionar nova venda -->
     <div v-if="showNewSaleForm" class="form-container">
       <h2>Nova Venda</h2>
       <form @submit.prevent="addSale">
@@ -115,8 +101,6 @@ onMounted(() => {
         </div>
       </form>
     </div>
-
-    <!-- Lista de Vendas -->
     <div class="sales-list">
       <h2>Vendas Registradas</h2>
       <table>
@@ -144,10 +128,7 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-
 <style scoped>
-/* Layout Geral */
 .sales-page {
   height: 100vh;
   display: flex;
@@ -155,42 +136,34 @@ onMounted(() => {
   justify-content: center;
   padding: 20px;
   font-family: Arial, sans-serif;
-  background-color: #f3ebe4; /* Fundo bege claro */
+  background-color: #f3ebe4; 
 }
-
-/* Cabeçalho */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-
 .header h1 {
   font-size: 24px;
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37;
 }
-
 .header button {
   padding: 10px 20px;
-  background-color: #8b5e3c; /* Marrom café */
+  background-color: #8b5e3c;
   color: white;
   border: none;
   border-radius: 5px;
   font-size: 14px;
   cursor: pointer;
 }
-
 .header button:hover {
-  background-color: #6f4e37; /* Tom mais escuro */
+  background-color: #6f4e37;
 }
-
-/* Formulário para Adicionar Venda */
 .form-container {
   position: absolute;
-  background-color: #fffaf0; /* Fundo bege claro */
-  padding: 20px;
-  border: 1px solid #8b5e3c; /* Bordas marromRGBO */
+  background-color: #fffaf0; 
+  border: 1px solid #8b5e3c;
   width: 400px;
   left: 79%;
   border-radius: 10px;
@@ -200,7 +173,7 @@ onMounted(() => {
 
 .form-container h2 {
   margin-bottom: 20px;
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37;
 }
 
 .form-control {
@@ -211,23 +184,23 @@ onMounted(() => {
   display: block;
   font-weight: bold;
   margin-bottom: 5px;
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37;
 }
 
 .form-control input,
 .form-control select {
   width: 100%;
   padding: 8px;
-  border: 1px solid #8b5e3c; /* Bordas marrom café */
+  border: 1px solid #8b5e3c;
   border-radius: 5px;
-  background-color: #f9f4ef; /* Fundo bege claro */
-  color: #6f4e37; /* Texto marrom escuro */
+  background-color: #f9f4ef;
+  color: #6f4e37; 
 }
 
 .form-control input:focus,
 .form-control select:focus {
   outline: none;
-  border-color: #6f4e37; /* Marrom escuro no foco */
+  border-color: #6f4e37;
 }
 
 .form-buttons {
@@ -245,24 +218,22 @@ onMounted(() => {
 }
 
 .form-buttons .btn {
-  background-color: #8b5e3c; /* Marrom café */
+  background-color: #8b5e3c;
 }
 
 .form-buttons .btn:hover {
-  background-color: #6f4e37; /* Marrom escuro */
+  background-color: #6f4e37;
 }
 
 .form-buttons .btn.cancel {
-  background-color: #e74c3c; /* Vermelho cancelamento */
+  background-color: #e74c3c;
 }
 
 .form-buttons .btn.cancel:hover {
-  background-color: #c0392b; /* Vermelho escuro */
+  background-color: #c0392b; 
 }
-
-/* Lista de Vendas */
 .sales-list {
-  background-color: #fffaf0; /* Fundo bege claro */
+  background-color: #fffaf0;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -270,7 +241,7 @@ onMounted(() => {
 
 .sales-list h2 {
   margin-bottom: 20px;
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37;
 }
 
 .sales-list table {
@@ -282,21 +253,21 @@ onMounted(() => {
 .sales-list td {
   padding: 12px 15px;
   text-align: left;
-  border-bottom: 1px solid #d3cbb8; /* Bege suave */
+  border-bottom: 1px solid #d3cbb8; 
 }
 
 .sales-list th {
-  background-color: #6f4e37; /* Fundo marrom escuro */
-  color: white; /* Texto branco */
+  background-color: #6f4e37;
+  color: white; 
   font-size: 14px;
 }
 
 .sales-list tr:hover {
-  background-color: #f3ebe4; /* Fundo bege claro no hover */
+  background-color: #f3ebe4; 
 }
 
 .sales-list td {
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37; 
 }
 </style>
 

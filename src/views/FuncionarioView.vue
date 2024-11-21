@@ -11,15 +11,11 @@ const employeeData = ref({
   address: '',
   cpfOrCnpj: '',
   admissionDate: '',
-  password: '', // Adiciona senha para cadastro no login
+  password: '', 
 });
 
 const employees = ref([]);
-
-// Aba ativa
 const activeTab = ref('cadastro');
-
-// Função para adicionar funcionário e login
 const addEmployee = async () => {
   if (
     employeeData.value.name &&
@@ -29,16 +25,11 @@ const addEmployee = async () => {
     employeeData.value.address &&
     employeeData.value.cpfOrCnpj &&
     employeeData.value.admissionDate &&
-    employeeData.value.password // Verifica se a senha foi preenchida
+    employeeData.value.password 
   ) {
     try {
-      // Faz POST no backend para salvar o funcionário
       await axios.post('http://localhost:5000/employees', employeeData.value);
-
-      // Atualiza a lista de funcionários
       await fetchEmployees();
-
-      // Limpa os campos do formulário
       Object.keys(employeeData.value).forEach((key) => {
         employeeData.value[key] = '';
       });
@@ -51,8 +42,6 @@ const addEmployee = async () => {
     alert('Preencha todos os campos!');
   }
 };
-
-// Função para buscar todos os funcionários
 const fetchEmployees = async () => {
   try {
     const response = await axios.get('http://localhost:5000/employees');
@@ -62,8 +51,6 @@ const fetchEmployees = async () => {
     alert('Erro ao buscar funcionários.');
   }
 };
-
-// Carrega a lista de funcionários ao montar o componente
 onMounted(() => {
   fetchEmployees();
 });
@@ -71,7 +58,6 @@ onMounted(() => {
 
 <template>
   <section class="employee-manager">
-    <!-- Abas -->
     <div class="tabs">
       <button :class="{ active: activeTab === 'cadastro' }" @click="activeTab = 'cadastro'">Cadastro</button>
       <button :class="{ active: activeTab === 'cadastrados' }" @click="activeTab = 'cadastrados'">Funcionários Cadastrados</button>
@@ -143,7 +129,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Estilo mantém o mesmo */
 .employee-manager {
   height: 100vh;
   display: flex;

@@ -33,7 +33,7 @@ const fetchUserName = async () => {
   if (storedCpf) {
     try {
       const response = await axios.get(`http://localhost:5000/employees/${storedCpf}`);
-      userName.value = response.data.name; // Nome retornado do backend
+      userName.value = response.data.name; 
     } catch (error) {
       console.error('Erro ao buscar nome do usuário:', error.response?.data || error.message);
     }

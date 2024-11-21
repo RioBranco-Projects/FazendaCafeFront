@@ -2,59 +2,32 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import Card from '../components/Card.vue';
-
-// ID do funcionário logado (exemplo)
 const employeeId = ref(localStorage.getItem('employeeId'));
-
-// Variáveis para os totais individuais do funcionário
 const totalSales = ref(0);
 const totalExpenses = ref(0);
 const profit = ref(0);
 const totalPlantios = ref(0);
-
-// Variáveis para os totais gerais
 const totalSalesGeneral = ref(0);
 const totalExpensesGeneral = ref(0);
 const profitGeneral = ref(0);
 const totalPlantiosGeneral = ref(0);
-
-// Variável para total de funcionários
 const totalUsers = ref(0);
-
-// Função para buscar os dados do dashboard
 const fetchDashboardData = async () => {
   try {
-    // Total de vendas do funcionário
     const salesResponse = await axios.get(`http://localhost:5000/employees/${employeeId.value}/sales/total`);
     totalSales.value = salesResponse.data.total;
-
-    // Total de despesas do funcionário
     const expensesResponse = await axios.get(`http://localhost:5000/employees/${employeeId.value}/expenses/total`);
     totalExpenses.value = expensesResponse.data.total;
-
-    // Calcula o lucro do funcionário
     profit.value = totalSales.value - totalExpenses.value;
-
-    // Total geral de vendas
     const salesGeneralResponse = await axios.get('http://localhost:5000/sales/total');
     totalSalesGeneral.value = salesGeneralResponse.data.total;
-
-    // Total geral de despesas
     const expensesGeneralResponse = await axios.get('http://localhost:5000/expenses/total');
     totalExpensesGeneral.value = expensesGeneralResponse.data.total;
-
-    // Calcula o lucro geral
     profitGeneral.value = totalSalesGeneral.value - totalExpensesGeneral.value;
-
-    // Total de funcionários cadastrados
     const usersResponse = await axios.get('http://localhost:5000/employees');
     totalUsers.value = usersResponse.data.length;
-
-    // Total de plantios do funcionário
     const plantiosResponse = await axios.get(`http://localhost:5000/employees/${employeeId.value}/plantios/total`);
     totalPlantios.value = plantiosResponse.data.total;
-
-    // Total geral de plantios
     const plantiosGeneralResponse = await axios.get('http://localhost:5000/plantios/total');
     totalPlantiosGeneral.value = plantiosGeneralResponse.data.total;
   } catch (error) {
@@ -62,8 +35,6 @@ const fetchDashboardData = async () => {
     alert('Erro ao carregar dados do dashboard.');
   }
 };
-
-// Carregar os dados ao montar o componente
 onMounted(() => {
   fetchDashboardData();
 });
@@ -172,7 +143,7 @@ onMounted(() => {
 
 .general-totals h2 {
   text-align: center;
-  color: #6f4e37; /* Marrom escuro */
+  color: #6f4e37; 
   margin-bottom: 20px;
 }
 .card {
